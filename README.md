@@ -90,7 +90,7 @@ the database, so the panel also stops looking like stock Filament.
 
 ![Editing a group — label, symbol, collapsible, visibility and roles](art/08-edit-group.jpeg)
 
-![Editing an item — label, URL, symbol, badge and roles](art/09-edit-item.jpeg)
+![Editing an item — label, URL, symbol, badge and roles](art/14-edit-item.jpeg)
 
 ![Replacement topbar — brand block, tagline, search and user menu](art/10-topbar.jpeg)
 
