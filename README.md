@@ -92,9 +92,6 @@ the database, so the panel also stops looking like stock Filament.
 
 ![Editing an item — label, URL, symbol, badge and roles](art/14-edit-item.jpeg)
 
-![Replacement topbar — brand block, tagline, search and user menu](art/10-topbar.jpeg)
-
-![Quick filter — type to narrow the sidebar](art/11-quick-filter.jpeg)
 
 ![How it works — the help slide-over](art/12-how-it-works.jpeg)
 
