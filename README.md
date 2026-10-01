@@ -47,6 +47,21 @@ the database, so the panel also stops looking like stock Filament.
   external references are removed, it is sized by CSS, and it follows the
   text colour (active state included) unless the drawing brings its own
   colours.
+- **Built for long menus.** Groups fold on the settings page (a folded
+  group shows its first icons), fold all at once, and fold by themselves
+  while a group is being dragged, so reordering twenty groups is moving
+  twenty compact cards. While an item is dragged every group title turns
+  into a drop target, collapsed or not. A search box filters rows and
+  groups, and a selection bar moves, hides, shows or releases many rows in
+  one go.
+- **Sized to taste, with a preview.** An *Appearance* slide-over sets the
+  size of item icons, the size of group icons and markers (`sm`, `md`,
+  `lg`, `xl`) and the density of the sidebar (`compact`, `normal`,
+  `spacious`), with a live preview built from the panel's real groups.
+- **Portable.** *Export JSON* downloads the whole arrangement — groups,
+  items, appearance and the uploaded image symbols embedded in the same
+  file — and *Import JSON* loads it in another environment or panel,
+  merging by key or replacing.
 - **Rename and re-icon what the code declares.** Label, symbol, URL and
   badge of a registered page or resource can be overridden from the page;
   an empty field keeps what the class declares, and *Release* gives the
@@ -92,6 +107,16 @@ the database, so the panel also stops looking like stock Filament.
 
 ![Editing an item — label, URL, symbol, badge and roles](art/14-edit-item.jpeg)
 
+
+![Collapsed groups — each one shows its first icons; fold or unfold all from the toolbar](art/15-collapsed-groups.jpeg)
+
+![Dragging an item — every group title becomes a drop target](art/16-drop-on-title.jpeg)
+
+![Search and multiple selection — the bar moves, hides, shows or releases the selection](art/17-bulk-selection.jpeg)
+
+![Appearance — icon sizes and density with a live preview of the panel's groups](art/18-appearance.jpeg)
+
+![Import JSON — merge or replace from a file exported in another environment](art/19-import.jpeg)
 
 ![How it works — the help slide-over](art/12-how-it-works.jpeg)
 
@@ -208,16 +233,22 @@ The sidebar replacement is always on. Everything else ships disabled.
 | `->authorizeSettingsUsing(?Closure $callback)` | `canManageSettings()` | any authenticated user | — | Who may open the settings page. |
 | `->iconsDisk(?string $disk)` | `getIconsDisk()` | `'public'` | `icons.disk` | Filesystem disk for image symbols uploaded from the settings page. Must be publicly reachable. |
 | `->iconsDirectory(?string $directory)` | `getIconsDirectory()` | `'navigator'` | `icons.directory` | Directory on that disk. |
+| `->iconSize(IconScale \| string $size)` | `getDefaultAppearance()` | `'md'` | `appearance.icon_size` | Default size of item icons: `sm`, `md`, `lg`, `xl`. What the *Appearance* slide-over stores for the panel wins over it. |
+| `->groupIconSize(IconScale \| string $size)` | `getDefaultAppearance()` | `'md'` | `appearance.group_icon_size` | Default size of group icons and markers: `sm`, `md`, `lg`, `xl`. |
+| `->density(Density \| string $density)` | `getDefaultAppearance()` | `'normal'` | `appearance.density` | Default row height and space between groups: `compact`, `normal`, `spacious`. |
 
 Config file (`config/filament-navigator.php`):
 
 | Key | Default | What it does |
 | --- | --- | --- |
 | `connection` | `null` | Database connection of the navigator tables (models and migration). |
-| `tables.groups` / `tables.items` | `navigator_groups` / `navigator_items` | Table names. Change before the first migration. |
+| `tables.groups` / `tables.items` / `tables.settings` | `navigator_groups` / `navigator_items` / `navigator_settings` | Table names. Change before the first migration. |
 | `cache_ttl` | `3600` | Seconds the composed configuration of a panel stays cached. Every write flushes it; `0` disables the cache. |
 | `unsorted_label`, `topbar`, `settings_page`, `quick_filter`, `brand_tagline`, `group_marker` | see above | Defaults for the fluent options. Environment variables: `FILAMENT_NAVIGATOR_CONNECTION`, `FILAMENT_NAVIGATOR_CACHE_TTL`, `FILAMENT_NAVIGATOR_TOPBAR`, `FILAMENT_NAVIGATOR_SETTINGS_PAGE`, `FILAMENT_NAVIGATOR_QUICK_FILTER`, `FILAMENT_NAVIGATOR_BRAND_TAGLINE`, `FILAMENT_NAVIGATOR_GROUP_MARKER`. |
 | `icons.disk` / `icons.directory` | `public` / `navigator` | Where uploaded image symbols are stored. Environment variables: `FILAMENT_NAVIGATOR_ICONS_DISK`, `FILAMENT_NAVIGATOR_ICONS_DIRECTORY`. |
+| `appearance.icon_size` / `appearance.group_icon_size` / `appearance.density` | `md` / `md` / `normal` | Defaults for the look of the sidebar until the settings page stores one. |
+
+`getAppearance(?string $panelId = null)` returns the resolved look of a panel (stored settings over the defaults) as an `Komma\Navigator\Support\Appearance`.
 
 ## The settings page
 
@@ -227,7 +258,40 @@ A **How it works** header action opens a slide-over with the flow and the meanin
 - drag a placed item back to *Discovered* to release it (custom links cannot be released, only deleted);
 - drag groups to reorder them.
 
-Header actions: **Import current navigation** (imports every native group and item as rows, keeping existing rows), **New group**, **Add link** (a custom URL, optionally in a new tab), **Reset** (deletes the panel's configuration; the sidebar returns to what Filament builds).
+Header actions: **Import current navigation** (imports every native group and item as rows, keeping existing rows), **New group**, **Add link** (a custom URL, optionally in a new tab), **Appearance** (icon sizes and density with a live preview) and, under **More**, **Export JSON**, **Import JSON** and **Reset** (deletes the panel's configuration; the sidebar returns to what Filament builds).
+
+### Long lists
+
+- **Folding.** A group folds from its title or chevron and shows its first icons while folded; *Collapse all* / *Expand all* sit next to the search box. While a group is dragged every group folds by itself and returns to its previous state when it is dropped. The folded state is remembered per browser.
+- **Drop on a title.** While an item is dragged, the title of every group becomes a drop target, including folded groups: the item goes to the end of that group. The lists themselves are highlighted as targets, and the *Unsorted* / *Discovered* column stays in view while the page scrolls.
+- **Search.** Filters rows and groups by label (a group whose name matches shows all its rows) and opens the groups with matches; `Esc` clears it. Dragging is paused while a search is active.
+- **Selection.** A box on every placed row and one per group (selects all its visible rows). The bar at the bottom moves the selection to a group — appended at the end, in the order the page shows them —, hides, shows or releases it (custom links are never released in bulk).
+
+### Appearance
+
+Stored per panel in the `navigator_settings` table and written on the sidebar as `data-kn-icon`, `data-kn-group-icon` and `data-kn-density`, which the stylesheet maps to `--kn-item-icon-size`, `--kn-group-icon-size`, `--kn-marker-size`, `--kn-item-height`, `--kn-group-gap` and `--kn-items-gap`.
+
+| Key | Item icons | Group icons | Group markers |
+| --- | --- | --- | --- |
+| `sm` | 1.1rem | 0.95rem | 0.85rem |
+| `md` | 1.35rem | 1.15rem | 1rem |
+| `lg` | 1.6rem | 1.4rem | 1.15rem |
+| `xl` | 1.9rem | 1.7rem | 1.3rem |
+
+| Density | Row height | Space between groups |
+| --- | --- | --- |
+| `compact` | 2rem | 0.7rem |
+| `normal` | 2.35rem | 1.1rem |
+| `spacious` | 2.8rem | 1.5rem |
+
+### Export and import
+
+*Export JSON* downloads a `komma-filament-navigator` document (format version 1): groups with their items in order, the *Unsorted* rows, the appearance and every uploaded image symbol embedded as base64. *Import JSON* reads it into the current panel:
+
+- **Merge** updates groups and items that share a key and adds the rest;
+- **Replace** deletes the panel's arrangement first.
+
+On import, SVG is sanitised again, icon names the application does not have are dropped, image files are only written inside the icons directory with an image extension and up to 512 KB, and custom links without label or URL are skipped. Items whose page or resource the target panel does not register are kept as rows and shown as *Not registered*.
 
 Per group: edit (label, symbol, collapsible, collapsed by default, visible, roles) and delete (its items move to Unsorted). Per item: hide/show, edit (label, symbol, URL, badge, roles, new tab, visible — empty fields keep what the page or resource declares) and release/delete.
 
@@ -317,8 +381,13 @@ The stylesheet reads these custom properties (defaults shown for light mode; `.d
     --kn-group-tracking: 0.14em;
     --kn-marker-size: 0.9rem;
     --kn-pad-x: 0.9rem;
+    --kn-items-gap: 0.1rem;
+    --kn-item-icon-size: 1.35rem;
+    --kn-group-icon-size: 1.15rem;
 }
 ```
+
+The *Appearance* settings redefine the size and density tokens through `[data-kn-icon]`, `[data-kn-group-icon]` and `[data-kn-density]` on the sidebar, so a theme that sets them on `:root` only changes the defaults.
 
 Class hooks, for anything the tokens do not cover: `.kn-sidebar`, `.kn-header`, `.kn-brand`, `.kn-brand-tagline`, `.kn-filter`, `.kn-nav`, `.kn-group`, `.kn-group-head`, `.kn-group-marker`, `.kn-group-label`, `.kn-item`, `.kn-item-link`, `.kn-item-icon`, `.kn-item-label`, `.kn-item-badge-ctn`, `.kn-footer`, `.kn-topbar`, `.kn-topbar-brand`, `.kn-topbar-end`. Active states: `.kn-item-active`, `.kn-item-parent-active`, `.kn-group-active`, `.kn-collapsed`.
 
