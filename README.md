@@ -58,6 +58,17 @@ the database, so the panel also stops looking like stock Filament.
   size of item icons, the size of group icons and markers (`sm`, `md`,
   `lg`, `xl`) and the density of the sidebar (`compact`, `normal`,
   `spacious`), with a live preview built from the panel's real groups.
+- **Logos instead of names.** *Symbol only* hides the name of a group or
+  item whose symbol is an icon, SVG or image — a product logo that already
+  says it — while the name stays in the tooltip, for screen readers and for
+  the quick filter.
+- **Every panel, safely.** The settings page only exists with an
+  authorisation rule, can arrange other panels you declare (each with its
+  own pages, resources and arrangement), and checks both on the server on
+  every action.
+- **Multi-tenant ready.** One global arrangement on a central connection,
+  optionally personalised by each tenant in its own database, falling back
+  to the global one until the tenant changes something.
 - **Portable.** *Export JSON* downloads the whole arrangement — groups,
   items, appearance and the uploaded image symbols embedded in the same
   file — and *Import JSON* loads it in another environment or panel,
@@ -117,6 +128,12 @@ the database, so the panel also stops looking like stock Filament.
 ![Appearance — icon sizes and density with a live preview of the panel's groups](art/18-appearance.jpeg)
 
 ![Import JSON — merge or replace from a file exported in another environment](art/19-import.jpeg)
+
+![Symbol only — logos as group titles, the name kept in the tooltip](art/20-symbol-only.jpeg)
+
+![Panels — tabs to arrange the navigation of every panel from one page](art/21-panels.jpeg)
+
+![No group · top and the origin of each row](art/22-top-and-origin.jpeg)
 
 ![How it works — the help slide-over](art/12-how-it-works.jpeg)
 
@@ -202,10 +219,13 @@ public function panel(Panel $panel): Panel
                 ->badges([
                     'tenants' => fn (): int => Tenant::query()->count(),
                 ])
-                ->authorizeSettingsUsing(fn (): bool => auth()->user()->hasRole('super-admin')),
+                ->authorizeSettingsUsing(fn (): bool => auth()->user()?->hasRole('super-admin') ?? false),
         );
 }
 ```
+
+`->authorizeSettingsUsing()` is required: without it the settings page is
+not registered (a warning is logged) and nobody can open it.
 
 **5. Import the navigation.** Open the settings page
 (`/{panel}/navigator`) and press **Import current navigation**, or run:
@@ -230,7 +250,10 @@ The sidebar replacement is always on. Everything else ships disabled.
 | `->groupMarker(?string $marker)` | `getGroupMarker()` | `''` | `group_marker` | Monospace character printed before every group label instead of an icon (`;`, `→`, `//`). |
 | `->unsortedLabel(?string $label)` | `getUnsortedLabel()` | `'Unsorted'` | `unsorted_label` | Label of the trailing group that holds placed rows without a group. Passed through `__()`. |
 | `->badges(array $resolvers)` | `getBadges()` | `[]` | — | Named closures. An item configured with one of these keys shows the returned value as its badge; `null` or `''` hides it. Resolved once per request; a throwing resolver hides the badge. |
-| `->authorizeSettingsUsing(?Closure $callback)` | `canManageSettings()` | any authenticated user | — | Who may open the settings page. |
+| `->authorizeSettingsUsing(?Closure $callback)` | `canManageSettings()` | nobody | — | Who may open the settings page. **Required** for the page to be registered; checked when the page opens and again on every action. In a panel tenants use, make it a rule a tenant cannot satisfy (a global role, not a team-scoped one). |
+| `->managesPanels(array \| Closure $panels)` | `getManagedPanels()` | `[]` | — | Ids of other panels this panel's settings page may arrange. Only panels that register the plugin are offered; any other id is rejected with 403, even when sent by hand. |
+| `->connection(?string $connection)` | `getConnection()` | `null` | `connection` | Connection of the navigator tables for the whole application. `null` uses the default connection of each request (in a multi-database tenancy, the tenant's). |
+| `->tenantOverrides(bool $condition = true)` | `hasTenantOverrides()` | `false` | `tenant_overrides` | With a base `connection`: inside a tenant, its own arrangement in its own database, falling back to the base one. See *Multi-tenancy*. |
 | `->iconsDisk(?string $disk)` | `getIconsDisk()` | `'public'` | `icons.disk` | Filesystem disk for image symbols uploaded from the settings page. Must be publicly reachable. |
 | `->iconsDirectory(?string $directory)` | `getIconsDirectory()` | `'navigator'` | `icons.directory` | Directory on that disk. |
 | `->iconSize(IconScale \| string $size)` | `getDefaultAppearance()` | `'md'` | `appearance.icon_size` | Default size of item icons: `sm`, `md`, `lg`, `xl`. What the *Appearance* slide-over stores for the panel wins over it. |
@@ -247,6 +270,7 @@ Config file (`config/filament-navigator.php`):
 | `unsorted_label`, `topbar`, `settings_page`, `quick_filter`, `brand_tagline`, `group_marker` | see above | Defaults for the fluent options. Environment variables: `FILAMENT_NAVIGATOR_CONNECTION`, `FILAMENT_NAVIGATOR_CACHE_TTL`, `FILAMENT_NAVIGATOR_TOPBAR`, `FILAMENT_NAVIGATOR_SETTINGS_PAGE`, `FILAMENT_NAVIGATOR_QUICK_FILTER`, `FILAMENT_NAVIGATOR_BRAND_TAGLINE`, `FILAMENT_NAVIGATOR_GROUP_MARKER`. |
 | `icons.disk` / `icons.directory` | `public` / `navigator` | Where uploaded image symbols are stored. Environment variables: `FILAMENT_NAVIGATOR_ICONS_DISK`, `FILAMENT_NAVIGATOR_ICONS_DIRECTORY`. |
 | `appearance.icon_size` / `appearance.group_icon_size` / `appearance.density` | `md` / `md` / `normal` | Defaults for the look of the sidebar until the settings page stores one. |
+| `tenant_overrides` | `false` | Default for `->tenantOverrides()`. |
 
 `getAppearance(?string $panelId = null)` returns the resolved look of a panel (stored settings over the defaults) as an `Komma\Navigator\Support\Appearance`.
 
@@ -259,6 +283,15 @@ A **How it works** header action opens a slide-over with the flow and the meanin
 - drag groups to reorder them.
 
 Header actions: **Import current navigation** (imports every native group and item as rows, keeping existing rows), **New group**, **Add link** (a custom URL, optionally in a new tab), **Appearance** (icon sizes and density with a live preview) and, under **More**, **Export JSON**, **Import JSON** and **Reset** (deletes the panel's configuration; the sidebar returns to what Filament builds).
+
+### Panels
+
+With `->managesPanels(['app', 'dev'])`, tabs at the top of the page switch between this panel and the declared ones. Each panel is arranged from its own navigation — Filament builds it with that panel as the current one — and stored under its own id; nothing is shared or copied between panels. Discovery runs as the signed-in user: items that user cannot see in the other panel are not listed. A panel whose navigation cannot be built from here (for example one that needs a tenant in its URLs) shows a notice and an empty *Discovered* list; what is already stored for it still applies.
+
+### No group · top, origin of each row
+
+- **No group · top** holds rows shown at the very top of the sidebar without a heading — the place for Dashboard. *Import current navigation* puts the items of the native group without a label there. *Unsorted* keeps the rows shown at the end.
+- Every row shows its **origin** next to the native group: `App` or the vendor namespace of the package that registers it (`Komma\Verifactu`), read from its key. Two resources with the same label from two plugins are told apart, and the search box filters by origin.
 
 ### Long lists
 
@@ -323,6 +356,8 @@ Every group and item — custom links included — has a **Symbol**, picked in i
 
 Rendering precedence for a group: its marker → its icon → the plugin's global marker.
 
+**Symbol only.** Groups and items whose symbol is an icon, SVG or image (or, for a registered item, the icon its class declares) have a *Symbol only* toggle. The sidebar then shows just the symbol — an image may be up to four times as wide as it is tall — and keeps the name as the tooltip, for screen readers and for the quick filter. The flag is ignored, and the name shown, whenever the row has a text marker or its symbol does not resolve, so a row never renders empty. On the settings page the name stays visible with a *Symbol only* badge. Stored in the `hide_label` column, added by the migration `update_navigator_tables_add_symbol_only`; until it runs the toggle is not offered.
+
 Images keep their own colours in light and dark mode and do not react to the active state — good for product logos, SVG is better for menu icons. Uploads go to `->iconsDisk('public')` / `->iconsDirectory('navigator')` (config `icons.disk` / `icons.directory`); the disk must be publicly reachable.
 
 Only items the current user can access are listed, because discovery reads the navigation Filament composed for that user: arrange the panel with an account that sees everything.
@@ -332,9 +367,32 @@ Roles are stored as an array of names and checked with `hasAnyRole()` on the pan
 ## How the composition works
 
 1. `$panel->getNavigation()` — Filament's own tree for the current user.
-2. Configured groups, in their order, with the rows placed in them. Rows whose key is not registered any more are skipped.
-3. Rows without a group → the *Unsorted* group.
-4. Registered items without a row → appended under their native group label, in native order.
+2. Rows in *No group · top* → a group without a label, first.
+3. Configured groups, in their order, with the rows placed in them. Rows whose key is not registered any more are skipped.
+4. Rows without a group → the *Unsorted* group.
+5. Registered items without a row → appended under their native group label, in native order; those of the native group without a label join the top group.
+
+*Import current navigation* matches a native group to an existing one by key or by label (case-insensitive) and only creates a group when one of its items has no row yet, so importing again never adds empty duplicates.
+
+## Multi-tenancy
+
+Where the arrangement lives is decided by `->connection()` and `->tenantOverrides()`:
+
+| Setup | Who sees what |
+| --- | --- |
+| `->connection('central')` | One arrangement per panel on the central connection, the same for every tenant. |
+| no connection | Each request uses its default connection; in a multi-database tenancy every tenant has its own arrangement and none sees the central one. |
+| `->connection('central')->tenantOverrides()` | The central arrangement is the global one. Inside a tenant (the default connection is another one) the tenant sees the global arrangement until it changes something; from then on it has its own, in its own database. *Back to the global navigation* deletes it; *Start from the global navigation* copies the global one as the starting point. |
+
+Reads are cached per connection, database and panel under a key that carries the panel's configuration version, which every write increments, so a change is seen on the next request in every context — tenants with their own cache prefix included.
+
+Tenant databases are not reached by `php artisan migrate`. Create or update the navigator tables in them with `navigator:schema`, which runs every package migration against the connection of the context and can be run again safely. With stancl/tenancy:
+
+```bash
+php artisan tinker --execute="\App\Models\Tenant::all()->each(fn (\$tenant) => \$tenant->run(fn () => \Illuminate\Support\Facades\Artisan::call('navigator:schema')));"
+```
+
+A tenant database without the navigator tables simply reads the global arrangement.
 
 With no rows at all for the panel the native tree is returned untouched, so installing the plugin changes the look but not the structure until you arrange it.
 
@@ -345,6 +403,7 @@ Item keys are what Filament assigns: the resource or page class for discovered i
 ```bash
 php artisan navigator:snapshot {panel} [--fresh]   # import the native navigation (--fresh deletes the current rows first)
 php artisan navigator:reset {panel} [--force]      # delete the configuration of a panel
+php artisan navigator:schema [--connection=]       # create or update the navigator tables on a connection (e.g. a tenant database)
 ```
 
 The snapshot command runs without an authenticated user: pages and resources that gate navigation on the user register nothing there. Use the page action when that matters.
