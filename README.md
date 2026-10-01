@@ -119,21 +119,21 @@ the database, so the panel also stops looking like stock Filament.
 ![Editing an item — label, URL, symbol, badge and roles](art/14-edit-item.jpeg)
 
 
-![Collapsed groups — each one shows its first icons; fold or unfold all from the toolbar](art/15-collapsed-groups.jpeg)
+![Collapsed groups — each one shows its first icons; fold or unfold all from the toolbar](art/15-collapsed-groups.png)
 
 ![Dragging an item — every group title becomes a drop target](art/16-drop-on-title.jpeg)
 
-![Search and multiple selection — the bar moves, hides, shows or releases the selection](art/17-bulk-selection.jpeg)
+![Search and multiple selection — the bar moves, hides, shows or releases the selection](art/17-bulk-selection.png)
 
-![Appearance — icon sizes and density with a live preview of the panel's groups](art/18-appearance.jpeg)
+![Appearance — icon sizes and density with a live preview of the panel's groups](art/18-appearance.png)
 
-![Import JSON — merge or replace from a file exported in another environment](art/19-import.jpeg)
+![Import JSON — merge or replace from a file exported in another environment](art/19-import.png)
 
-![Symbol only — logos as group titles, the name kept in the tooltip](art/20-symbol-only.jpeg)
+![Symbol only — logos as group titles, the name kept in the tooltip](art/20-symbol-only.png)
 
-![Panels — tabs to arrange the navigation of every panel from one page](art/21-panels.jpeg)
+![Panels — tabs to arrange the navigation of every panel from one page](art/21-panels.png)
 
-![No group · top and the origin of each row](art/22-top-and-origin.jpeg)
+![No group · top and the origin of each row](art/22-top-and-origin.png)
 
 ![How it works — the help slide-over](art/12-how-it-works.jpeg)
 
