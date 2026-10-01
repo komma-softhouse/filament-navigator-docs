@@ -241,24 +241,38 @@ plugin changes the look, not the structure.
 
 The sidebar replacement is always on. Everything else ships disabled.
 
-| Method | Getter | Default | Config key | What it does |
-| --- | --- | --- | --- | --- |
-| `->topbar(bool $condition = true)` | `hasTopbar()` | `false` | `topbar` | Replaces the panel topbar with the plugin's (brand block with tagline, sidebar controls, global search, notifications, user menu). Top navigation mode is not supported by the replacement topbar. |
-| `->settingsPage(bool $condition = true)` | `hasSettingsPage()` | `false` | `settings_page` | Registers the **Navigation** page in the panel (slug `navigator`, group *Settings*). |
-| `->quickFilter(bool $condition = true)` | `hasQuickFilter()` | `false` | `quick_filter` | Type-to-filter box at the top of the sidebar; filters the rendered items client-side, `Esc` clears. |
-| `->brandTagline(string \| Closure \| null $tagline)` | `getBrandTagline()` | `null` | `brand_tagline` | Short monospace line under the logo, in the sidebar header and in the replacement topbar. |
-| `->groupMarker(?string $marker)` | `getGroupMarker()` | `''` | `group_marker` | Monospace character printed before every group label instead of an icon (`;`, `→`, `//`). |
-| `->unsortedLabel(?string $label)` | `getUnsortedLabel()` | `'Unsorted'` | `unsorted_label` | Label of the trailing group that holds placed rows without a group. Passed through `__()`. |
-| `->badges(array $resolvers)` | `getBadges()` | `[]` | — | Named closures. An item configured with one of these keys shows the returned value as its badge; `null` or `''` hides it. Resolved once per request; a throwing resolver hides the badge. |
-| `->authorizeSettingsUsing(?Closure $callback)` | `canManageSettings()` | nobody | — | Who may open the settings page. **Required** for the page to be registered; checked when the page opens and again on every action. In a panel tenants use, make it a rule a tenant cannot satisfy (a global role, not a team-scoped one). |
-| `->managesPanels(array \| Closure $panels)` | `getManagedPanels()` | `[]` | — | Ids of other panels this panel's settings page may arrange. Only panels that register the plugin are offered; any other id is rejected with 403, even when sent by hand. |
-| `->connection(?string $connection)` | `getConnection()` | `null` | `connection` | Connection of the navigator tables for the whole application. `null` uses the default connection of each request (in a multi-database tenancy, the tenant's). |
-| `->tenantOverrides(bool $condition = true)` | `hasTenantOverrides()` | `false` | `tenant_overrides` | With a base `connection`: inside a tenant, its own arrangement in its own database, falling back to the base one. See *Multi-tenancy*. |
-| `->iconsDisk(?string $disk)` | `getIconsDisk()` | `'public'` | `icons.disk` | Filesystem disk for image symbols uploaded from the settings page. Must be publicly reachable. |
-| `->iconsDirectory(?string $directory)` | `getIconsDirectory()` | `'navigator'` | `icons.directory` | Directory on that disk. |
-| `->iconSize(IconScale \| string $size)` | `getDefaultAppearance()` | `'md'` | `appearance.icon_size` | Default size of item icons: `sm`, `md`, `lg`, `xl`. What the *Appearance* slide-over stores for the panel wins over it. |
-| `->groupIconSize(IconScale \| string $size)` | `getDefaultAppearance()` | `'md'` | `appearance.group_icon_size` | Default size of group icons and markers: `sm`, `md`, `lg`, `xl`. |
-| `->density(Density \| string $density)` | `getDefaultAppearance()` | `'normal'` | `appearance.density` | Default row height and space between groups: `compact`, `normal`, `spacious`. |
+- **`->topbar(bool $condition = true)`**: Replaces the panel topbar with the plugin's (brand block with tagline, sidebar controls, global search, notifications, user menu). Top navigation mode is not supported by the replacement topbar.  
+  Getter `hasTopbar()` · default `false` · config key `topbar`
+- **`->settingsPage(bool $condition = true)`**: Registers the **Navigation** page in the panel (slug `navigator`, group *Settings*).  
+  Getter `hasSettingsPage()` · default `false` · config key `settings_page`
+- **`->quickFilter(bool $condition = true)`**: Type-to-filter box at the top of the sidebar; filters the rendered items client-side, `Esc` clears.  
+  Getter `hasQuickFilter()` · default `false` · config key `quick_filter`
+- **`->brandTagline(string | Closure | null $tagline)`**: Short monospace line under the logo, in the sidebar header and in the replacement topbar.  
+  Getter `getBrandTagline()` · default `null` · config key `brand_tagline`
+- **`->groupMarker(?string $marker)`**: Monospace character printed before every group label instead of an icon (`;`, `→`, `//`).  
+  Getter `getGroupMarker()` · default `''` · config key `group_marker`
+- **`->unsortedLabel(?string $label)`**: Label of the trailing group that holds placed rows without a group. Passed through `__()`.  
+  Getter `getUnsortedLabel()` · default `'Unsorted'` · config key `unsorted_label`
+- **`->badges(array $resolvers)`**: Named closures. An item configured with one of these keys shows the returned value as its badge; `null` or `''` hides it. Resolved once per request; a throwing resolver hides the badge.  
+  Getter `getBadges()` · default `[]`
+- **`->authorizeSettingsUsing(?Closure $callback)`**: Who may open the settings page. **Required** for the page to be registered; checked when the page opens and again on every action. In a panel tenants use, make it a rule a tenant cannot satisfy (a global role, not a team-scoped one).  
+  Getter `canManageSettings()` · default nobody
+- **`->managesPanels(array | Closure $panels)`**: Ids of other panels this panel's settings page may arrange. Only panels that register the plugin are offered; any other id is rejected with 403, even when sent by hand.  
+  Getter `getManagedPanels()` · default `[]`
+- **`->connection(?string $connection)`**: Connection of the navigator tables for the whole application. `null` uses the default connection of each request (in a multi-database tenancy, the tenant's).  
+  Getter `getConnection()` · default `null` · config key `connection`
+- **`->tenantOverrides(bool $condition = true)`**: With a base `connection`: inside a tenant, its own arrangement in its own database, falling back to the base one. See *Multi-tenancy*.  
+  Getter `hasTenantOverrides()` · default `false` · config key `tenant_overrides`
+- **`->iconsDisk(?string $disk)`**: Filesystem disk for image symbols uploaded from the settings page. Must be publicly reachable.  
+  Getter `getIconsDisk()` · default `'public'` · config key `icons.disk`
+- **`->iconsDirectory(?string $directory)`**: Directory on that disk.  
+  Getter `getIconsDirectory()` · default `'navigator'` · config key `icons.directory`
+- **`->iconSize(IconScale | string $size)`**: Default size of item icons: `sm`, `md`, `lg`, `xl`. What the *Appearance* slide-over stores for the panel wins over it.  
+  Getter `getDefaultAppearance()` · default `'md'` · config key `appearance.icon_size`
+- **`->groupIconSize(IconScale | string $size)`**: Default size of group icons and markers: `sm`, `md`, `lg`, `xl`.  
+  Getter `getDefaultAppearance()` · default `'md'` · config key `appearance.group_icon_size`
+- **`->density(Density | string $density)`**: Default row height and space between groups: `compact`, `normal`, `spacious`.  
+  Getter `getDefaultAppearance()` · default `'normal'` · config key `appearance.density`
 
 Config file (`config/filament-navigator.php`):
 
