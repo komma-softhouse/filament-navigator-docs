@@ -62,6 +62,25 @@ the database, so the panel also stops looking like stock Filament.
   item whose symbol is an icon, SVG or image — a product logo that already
   says it — while the name stays in the tooltip, for screen readers and for
   the quick filter.
+- **Code and navigation side by side.** Every page and resource of a
+  panel is listed whatever the admin's permissions, each row shows the group
+  its class declares, rows moved away from it are flagged and can be put
+  back in bulk, groups can collect other names through aliases (System →
+  Sistema), and four views — List, Tabs, Compact and By code — fit any panel
+  size.
+- **For the people using it.** Favorites with a star on any item and a
+  personal group at the top, recently opened items, own links, a quick-access
+  modal with `Cmd/Ctrl+K` and number keys, live badges, child items,
+  separators and headings — each switched on per panel, `->all()` for
+  everything.
+- **For the administrator.** An arrangement per role with fallback to the
+  base, the user menu arranged from the same page, labels per language,
+  show-from dates and expiring *New* / *Beta* marks, three group styles
+  (flat, tree, cards), click counts per item and *Hide what nobody uses*.
+- **For the developer.** `NavigationChanged` / `ItemsMoved` events,
+  `resolveLabelUsing()` and `mutateNavigationUsing()` hooks,
+  `navigator:install`, top-navigation rendering and a published JSON schema
+  of the export.
 - **Every panel, safely.** The settings page only exists with an
   authorisation rule, can arrange other panels you declare (each with its
   own pages, resources and arrangement), and checks both on the server on
@@ -134,6 +153,16 @@ the database, so the panel also stops looking like stock Filament.
 ![Panels — tabs to arrange the navigation of every panel from one page](art/21-panels.jpeg)
 
 ![No group · top and the origin of each row](art/22-top-and-origin.jpeg)
+
+![By code — one card per declared group with the state of each class](art/23-by-code.jpeg)
+
+![Tabs view — one group at a time](art/24-tabs-view.jpeg)
+
+![Quick access — favorites, recents, own links and application links](art/25-quick-access.jpeg)
+
+![Tree group style, favorites and recents in the sidebar](art/26-tree-and-favorites.jpeg)
+
+![Arrangement per role and the user menu tab](art/27-role-layouts.jpeg)
 
 ![How it works — the help slide-over](art/12-how-it-works.jpeg)
 
@@ -273,17 +302,38 @@ The sidebar replacement is always on. Everything else ships disabled.
   Getter `getDefaultAppearance()` · default `'md'` · config key `appearance.group_icon_size`
 - **`->density(Density | string $density)`**: Default row height and space between groups: `compact`, `normal`, `spacious`.  
   Getter `getDefaultAppearance()` · default `'normal'` · config key `appearance.density`
+- **`->groupStyle(GroupStyle | string $style)`**: Default way items hang from their group: `flat`, `tree`, `cards`.  
+  Getter `getDefaultAppearance()` · default `'flat'` · config key `appearance.group_style`
+- **`->all(bool $condition = true)`**: Switches on the topbar, the settings page, the quick filter and every feature below.  
+  Getter `hasFeature()`
+- **`->favorites()`, `->recents()`, `->quickLinks()`, `->keyboardShortcuts()`, `->liveBadges()`, `->roleLayouts()`, `->childItems()`, `->separators()`, `->topNavigation()`, `->userMenu()`, `->localizedLabels()`, `->scheduling()`, `->analytics()`**: Each feature, per panel. See *Features*.  
+  Getter `hasFeature(string $feature)` · default all `false` · config keys `features.*`
+- **`->systemLinks(array | Closure $links)`**: Links the application offers to everyone in the quick-access modal: arrays with `label`, `url` and optionally `icon`, `description`, `group`, `new_tab`.  
+  Getter `getSystemLinks()` · default `[]`
+- **`->favoritesLimit(int)`, `->recentsLimit(int)`, `->userLinksLimit(int)`**: Limits of the personal lists.  
+  Getters `getFavoritesLimit()`, `getRecentsLimit()`, `getUserLinksLimit()` · defaults `12`, `5`, `5`
+- **`->badgesInterval(int $seconds)`**: Refresh interval of live badges.  
+  Getter `getBadgesInterval()` · default `60`
+- **`->locales(array $locales)`**: Locales offered for labels per language.  
+  Getter `getLocales()` · default the application and fallback locales
+- **`->layoutRoles(array | Closure $roles)`**: Roles that can have an arrangement of their own.  
+  Getter `getLayoutRoles()` · default every spatie/laravel-permission role
+- **`->resolveLabelUsing(Closure $callback)`**: `fn (string $label, array $row, NavigationItem $item): string`, the last word on every item label.  
+  Getter `getLabelResolver()`
+- **`->mutateNavigationUsing(Closure $callback)`**: `fn (array $groups, Panel $panel): array`, the last word on the composed navigation.  
+  Getter `getNavigationMutator()`
 
 Config file (`config/filament-navigator.php`):
 
 | Key | Default | What it does |
 | --- | --- | --- |
 | `connection` | `null` | Database connection of the navigator tables (models and migration). |
-| `tables.groups` / `tables.items` / `tables.settings` | `navigator_groups` / `navigator_items` / `navigator_settings` | Table names. Change before the first migration. |
+| `tables.groups` / `tables.items` / `tables.settings` / `tables.favorites` / `tables.user_links` / `tables.clicks` | `navigator_groups` / `navigator_items` / `navigator_settings` / `navigator_favorites` / `navigator_user_links` / `navigator_clicks` | Table names. Change before the first migration. |
 | `cache_ttl` | `3600` | Seconds the composed configuration of a panel stays cached. Every write flushes it; `0` disables the cache. |
 | `unsorted_label`, `topbar`, `settings_page`, `quick_filter`, `brand_tagline`, `group_marker` | see above | Defaults for the fluent options. Environment variables: `FILAMENT_NAVIGATOR_CONNECTION`, `FILAMENT_NAVIGATOR_CACHE_TTL`, `FILAMENT_NAVIGATOR_TOPBAR`, `FILAMENT_NAVIGATOR_SETTINGS_PAGE`, `FILAMENT_NAVIGATOR_QUICK_FILTER`, `FILAMENT_NAVIGATOR_BRAND_TAGLINE`, `FILAMENT_NAVIGATOR_GROUP_MARKER`. |
 | `icons.disk` / `icons.directory` | `public` / `navigator` | Where uploaded image symbols are stored. Environment variables: `FILAMENT_NAVIGATOR_ICONS_DISK`, `FILAMENT_NAVIGATOR_ICONS_DIRECTORY`. |
-| `appearance.icon_size` / `appearance.group_icon_size` / `appearance.density` | `md` / `md` / `normal` | Defaults for the look of the sidebar until the settings page stores one. |
+| `appearance.icon_size` / `appearance.group_icon_size` / `appearance.density` / `appearance.group_style` | `md` / `md` / `normal` / `flat` | Defaults for the look of the sidebar until the settings page stores one. |
+| `features.*` | all `false` | Defaults for the feature toggles; each panel switches its own on fluently. |
 | `tenant_overrides` | `false` | Default for `->tenantOverrides()`. |
 
 `getAppearance(?string $panelId = null)` returns the resolved look of a panel (stored settings over the defaults) as an `Komma\Navigator\Support\Appearance`.
@@ -297,6 +347,47 @@ A **How it works** header action opens a slide-over with the flow and the meanin
 - drag groups to reorder them.
 
 Header actions: **Import current navigation** (imports every native group and item as rows, keeping existing rows), **New group**, **Add link** (a custom URL, optionally in a new tab), **Appearance** (icon sizes and density with a live preview) and, under **More**, **Export JSON**, **Import JSON** and **Reset** (deletes the panel's configuration; the sidebar returns to what Filament builds).
+
+### Code and navigation
+
+Every page and resource declares its group in code (`getNavigationGroup()`). *Import current navigation* copies that; from then on the arrangement stored here wins over the code.
+
+- **Discovery.** The page lists every page and resource the panel registers — with the filters Filament applies (clusters, `shouldRegisterNavigation`, nested resources, resources without an index page) but **without** `canAccess()` — plus the panel's own navigation items. Items that depend on a tenant, a plan or a permission can be arranged by an administrator; the sidebar still shows each user only what they may open.
+- **Each row** shows the group its class declares and its class (shortened, full name on hover). A row placed elsewhere carries *Code says: …*; the *Off their code group* filter lists only those, and *Back to its code group* (selection bar) puts them where the code declares — creating the group if needed — keeping label, icon and badge.
+- **Aliases.** A group can also collect other names the code uses (*Also collects* in its edit modal): with `System` as an alias of `Sistema`, classes declaring `System` are imported into, returned to and shown in `Sistema`, and count as being in their code group.
+- **Discovered** is grouped by declared group, each with *Place the rest*.
+- **Sort automatically** (under *More*): groups and items as the code declares (the panel's `navigationGroups()` order, then the lowest `navigationSort`; items by `navigationSort`) or alphabetically, for the whole panel or one group. It only reorders; nothing changes group.
+
+### Views
+
+A selector next to the search box, remembered per browser:
+
+- **List** — every group stacked and collapsible.
+- **Tabs** — one group at a time, with the groups as vertical tabs; dropping an item on a tab moves it there.
+- **Compact** — one dense line per row.
+- **By code** — one card per group the code declares, every class with its state (*In its group*, *Moved to …*, *Hidden*, *Not placed*) and, per card, *Back to the code*, *Place the rest* and *Assign alias*; a last card lists rows no class declares (custom links, removed classes).
+
+### Features
+
+Every feature ships off and is switched on per panel instance — the panel id never matters — with `->all()` or one by one.
+
+| Feature | What it does |
+| --- | --- |
+| `favorites` | A star on every sidebar item. Starred items gather in *My favorites* at the top of the sidebar, per user, with the links the user adds for themselves (`navigator_favorites`, `navigator_user_links`). |
+| `recents` | *Recent* group with the last items the user opened; tracked on the sidebar render, kept in the cache for thirty days. |
+| `quickLinks` | Quick-access button next to the global search opening a modal with favorites, recents, own links, the application's `systemLinks()` and a search over the whole sidebar. |
+| `keyboardShortcuts` | `Cmd/Ctrl+K` opens the quick-access modal; keys `1`–`9` open the first favorites while it is open. |
+| `liveBadges` | The sidebar polls at `badgesInterval()` seconds so badges follow the data without a reload. |
+| `roleLayouts` | An arrangement per role (`admin#role:sales` in the same tables), chosen from tabs above the board. A user whose first role has one sees it; otherwise the base. *Start from the base arrangement* copies the base; *Reset* deletes the role's own. |
+| `childItems` | *Inside* in the item modal hangs an item from another one of the same list as a collapsible child. |
+| `separators` | *Add separator* / *Add heading* under *More*: a thin line or a small uppercase title inside a group. |
+| `topNavigation` | With the panel's own `->topNavigation()`, the composed navigation renders in the topbar as dropdowns (groups) and links. |
+| `userMenu` | The *User menu* tab arranges the links of the account menu (`admin#user-menu`); only links count. |
+| `localizedLabels` | A label per locale (`->locales()`) on groups and items; the current locale wins, the main label is the fallback. |
+| `scheduling` | *Show from* hides an item until a date; a *New* / *Beta* mark shows as a badge until *Mark until*. |
+| `analytics` | A beacon counts clicks per item, user and first role (`navigator_clicks`); every row shows its clicks of the last thirty days and *Hide what nobody uses* hides the rows nobody clicked. |
+
+Group style (*Appearance*): **Flat** keeps items at the level of the group icon, **Tree** indents them under it with a guide line, **Cards** puts each group in its own box.
 
 ### Panels
 
@@ -412,9 +503,18 @@ With no rows at all for the panel the native tree is returned untouched, so inst
 
 Item keys are what Filament assigns: the resource or page class for discovered items, the label for hand-made `NavigationItem` instances, `custom:{slug}-{random}` for links created from the page. Renaming a class orphans its row (it is skipped, never shown broken); release it from the page and place the item again.
 
+## Events and hooks
+
+- `Komma\Navigator\Events\NavigationChanged($layoutId, $panelId)` after every write, once the cache version is bumped.
+- `Komma\Navigator\Events\ItemsMoved($layoutId, $itemIds, $groupId, $pinned)` when rows change place.
+- `->resolveLabelUsing()` and `->mutateNavigationUsing()` on the plugin, see *Configuration*.
+
+The export format is documented as a JSON schema at `resources/schema/navigator-export.schema.json`; publish it with `php artisan vendor:publish --tag=filament-navigator-schema`.
+
 ## Artisan commands
 
 ```bash
+php artisan navigator:install [--no-migrate]           # run the migrations and print the registration to paste
 php artisan navigator:snapshot {panel} [--fresh]   # import the native navigation (--fresh deletes the current rows first)
 php artisan navigator:reset {panel} [--force]      # delete the configuration of a panel
 php artisan navigator:schema [--connection=]       # create or update the navigator tables on a connection (e.g. a tenant database)

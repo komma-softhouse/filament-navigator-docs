@@ -4,6 +4,94 @@ All notable changes to `filament-navigator` are documented here. The format
 follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this
 project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.6.2](https://github.com/komma-softhouse/filament-navigator/releases/tag/v1.6.2) - 2026-10-02
+
+### Fixed
+
+- First published tag of the 1.6 series; carries everything listed under 1.6.0.
+
+## [v1.6.0](https://github.com/komma-softhouse/filament-navigator/releases/tag/v1.6.0/compare/v1.6.0...v1.6.0) - 2026-10-02
+
+### Added
+
+- Per-panel feature toggles: `->all()`, `->favorites()`, `->recents()`, `->quickLinks()`, `->keyboardShortcuts()`, `->liveBadges()`, `->roleLayouts()`, `->childItems()`, `->separators()`, `->topNavigation()`, `->userMenu()`, `->localizedLabels()`, `->scheduling()`, `->analytics()`, each with its options (`systemLinks()`, `favoritesLimit()`, `recentsLimit()`, `userLinksLimit()`, `badgesInterval()`, `locales()`, `layoutRoles()`).
+- Group style in *Appearance*: flat, tree (items hanging from the group with a guide line) and cards.
+- Favorites (star on every item, *My favorites* group, own links), recents, quick-access modal with search, `Cmd/Ctrl+K` and number keys.
+- Live badges by polling, child items (*Inside*), separators and headings inside groups.
+- An arrangement per role with fallback to the base, and the user menu arranged from the settings page.
+- Labels per language; *Show from* dates and expiring *New* / *Beta* marks.
+- Click analytics per item, user and role; *Hide what nobody uses*.
+- Top-navigation rendering of the composed navigation with the panel's `topNavigation()`.
+- `NavigationChanged` and `ItemsMoved` events; `resolveLabelUsing()` and `mutateNavigationUsing()` hooks; `navigator:install`; a JSON schema of the export (`vendor:publish --tag=filament-navigator-schema`).
+- Migrations `update_navigator_settings_add_group_style`, `create_navigator_user_tables` and `update_navigator_tables_add_children_labels_and_schedule` (all additive).
+
+### Changed
+
+- The export carries group style, group and item labels per language, child items, scheduling and separators/headings.
+
+## [1.6.0](https://github.com/komma-softhouse/filament-navigator/releases/tag/v1.6.0) - 2026-10-02
+
+### Added
+
+- Per-panel feature toggles: `->all()`, `->favorites()`, `->recents()`, `->quickLinks()`, `->keyboardShortcuts()`, `->liveBadges()`, `->roleLayouts()`, `->childItems()`, `->separators()`, `->topNavigation()`, `->userMenu()`, `->localizedLabels()`, `->scheduling()`, `->analytics()`, each with its options (`systemLinks()`, `favoritesLimit()`, `recentsLimit()`, `userLinksLimit()`, `badgesInterval()`, `locales()`, `layoutRoles()`).
+- Group style in *Appearance*: flat, tree (items hanging from the group with a guide line) and cards.
+- Favorites (star on every item, *My favorites* group, own links), recents, quick-access modal with search, `Cmd/Ctrl+K` and number keys.
+- Live badges by polling, child items (*Inside*), separators and headings inside groups.
+- An arrangement per role with fallback to the base, and the user menu arranged from the settings page.
+- Labels per language; *Show from* dates and expiring *New* / *Beta* marks.
+- Click analytics per item, user and role; *Hide what nobody uses*.
+- Top-navigation rendering of the composed navigation with the panel's `topNavigation()`.
+- `NavigationChanged` and `ItemsMoved` events; `resolveLabelUsing()` and `mutateNavigationUsing()` hooks; `navigator:install`; a JSON schema of the export (`vendor:publish --tag=filament-navigator-schema`).
+- Migrations `update_navigator_settings_add_group_style`, `create_navigator_user_tables` and `update_navigator_tables_add_children_labels_and_schedule` (all additive).
+
+### Changed
+
+- The export carries group style, group and item labels per language, child items, scheduling and separators/headings.
+
+## [v1.5.0](https://github.com/komma-softhouse/filament-navigator/releases/tag/v1.5.0/compare/v1.5.0...v1.5.0) - 2026-10-01
+
+### Added
+
+- Discovery from the panel's classes: every registered page and resource is listed on the settings page whatever the admin's permissions or tenant (same filters as Filament except `canAccess()`); the sidebar keeps every access check.
+- Each row shows the group its class declares and its class; rows placed elsewhere are flagged (*Code says: …*), can be filtered (*Off their code group*) and put back in bulk (*Back to its code group*).
+- Group aliases (*Also collects*): classes declaring another name (e.g. `System`) land in the group on import, on return and in the sidebar.
+- Views: List, Tabs (drop on a tab to move), Compact and By code (one card per declared group with the state of each class, *Back to the code*, *Place the rest*, *Assign alias*); remembered per browser.
+- *Discovered* grouped by declared group with *Place the rest*.
+- *Sort automatically*: groups and items as the code declares or alphabetically, for the whole panel or one group.
+- Migration `update_navigator_tables_add_aliases` (additive).
+
+### Changed
+
+- Unplaced items of a declared group join the configured group with that name or alias instead of showing a second group with the same name.
+
+## [1.5.0](https://github.com/komma-softhouse/filament-navigator/releases/tag/v1.5.0) - 2026-10-02
+
+### Added
+
+- Discovery from the panel's classes: every registered page and resource is listed on the settings page whatever the admin's permissions or tenant (same filters as Filament except `canAccess()`); the sidebar keeps every access check.
+- Each row shows the group its class declares and its class; rows placed elsewhere are flagged (*Code says: …*), can be filtered (*Off their code group*) and put back in bulk (*Back to its code group*).
+- Group aliases (*Also collects*): classes declaring another name (e.g. `System`) land in the group on import, on return and in the sidebar.
+- Views: List, Tabs (drop on a tab to move), Compact and By code (one card per declared group with the state of each class, *Back to the code*, *Place the rest*, *Assign alias*); remembered per browser.
+- *Discovered* grouped by declared group with *Place the rest*.
+- *Sort automatically*: groups and items as the code declares or alphabetically, for the whole panel or one group.
+- Migration `update_navigator_tables_add_aliases` (additive).
+
+### Changed
+
+- Unplaced items of a declared group join the configured group with that name or alias instead of showing a second group with the same name.
+
+## [v1.4.1](https://github.com/komma-softhouse/filament-navigator/releases/tag/v1.4.1/compare/v1.4.1...v1.4.1) - 2026-10-01
+
+### Fixed
+
+- The sidebar quick filter showed no results when the match was in a collapsed group: the collapse leaves the list at height 0 with overflow hidden, and only its display was overridden while filtering.
+
+## [1.4.1](https://github.com/komma-softhouse/filament-navigator/releases/tag/v1.4.1) - 2026-10-02
+
+### Fixed
+
+- The sidebar quick filter showed no results when the match was in a collapsed group: the collapse leaves the list at height 0 with overflow hidden, and only its display was overridden while filtering.
+
 ## [v1.4.0](https://github.com/komma-softhouse/filament-navigator/releases/tag/v1.4.0/compare/v1.4.0...v1.4.0) - 2026-10-01
 
 ### Security
